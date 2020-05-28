@@ -18,20 +18,70 @@ import java.util.Scanner;
 /** <description of class Game>
  */
 public class Game{
-    // ArrayList to store doors
-    public Door doors[] = new Door[3];
+    // Array to store doors
+    private Door doors[] = new Door[3];
+    private Door selectedDoor;
+    private Door revealDoor;
     
+    // Fields to draw the door
+    private final String DOORIMAGE = "images/door.jpg";
+    private int TOP = 100;
+    private int LEFT = 100;
+    private int SIZE = 100;
+    private int BUFFER = 50;
+   
     /**
-     * Constructor for the GUI
+     * Constructor for the Game
      */
     public Game() {
-        // Adding doors to the arraylist
+        // Adding doors to the array
         for (int i = 0; i<3; i++){
-            doors[i] = new Door();
+            int leftPos;      // top corner of door
+            leftPos = LEFT*(i+1)+BUFFER;
+            doors[i] = new Door(leftPos, TOP);
+            
+            // Draw Door
+            UI.drawImage(DOORIMAGE, leftPos, TOP, SIZE, SIZE);
+            
+            // Get First choice 
+            UI.setMouseListener((action, x, y) -> setFirstChoice(action, x, y));
         }
-    //gameShow();
     
     }
+    
+    /**
+     * Method setFirstChoice
+     * 
+     * @param action    The mouse action which occurred --
+     *  only interested in pressed
+     * @param   x   X-coordinate of the mouse click
+     * @param   y   Y-coordinate of the mouse click
+     * 
+     * If the action is "pressed" and a door is not open
+     * open the door and select it as their first choice
+     */
+    private void setFirstChoice(String action, double x, double y){
+        
+        
+        // Check first choice has not been made
+        for (int i = 0; i < 3; i++) {
+            if (this.doors[i].getFirstChoice() == true) {
+                doors[i].resetFirstChoice();
+            }
+        }
+        
+        //
+        if (action.equals("pressed")) {
+            for (int i = 0; i < 3; i++) {
+                if (this.doors[i].onDoor(x, y) == true) {
+                    doors[i].setFirstChoice();
+                    UI.println(i);  // Print out door selected
+                    // Go To Reveal Door
+                    this.showDoor();
+                }
+        }
+    }
+}
     
     /**
      * Return a random number based on n
@@ -44,29 +94,37 @@ public class Game{
     }
 
     /**
-     * Reveal no prize door
+     * Reveal the door with no prize
+     * returns the door with no prize
      */
-    private void revealDoor(){
-        // Reveal another door
-        int otherDoor;
+    private void showDoor(){
+        // Reveal anreveal door
+        int revealDoorIDX;
         do {
-            otherDoor = randNum(3);
-        } while (doors[otherDoor].getFirstChoice() == true || doors[otherDoor].getPrize() == true);
-        doors[otherDoor].setOtherDoor();
-        System.out.println("Behind Door " + otherDoor + " is no prize");
+            revealDoorIDX = randNum(3);
+            this.revealDoor = doors[revealDoorIDX]; 
+        } while (doors[revealDoorIDX].getFirstChoice() == true || doors[revealDoorIDX].getPrize() == true);
+        doors[revealDoorIDX].setRevealDoor();
+        UI.println("Behind Door " + revealDoorIDX + " is no prize");
+        //Change image
+
+        //get position of reveal door and redraw image
+        
+        UI.drawImage("images/goat.jpg", this.revealDoor.getDoorX(), this.revealDoor.getDoorY(),100, 100);
     }
+
     
     /**
      * Ask user if they want to switch Door
      * If they want to switch set it as their final choice
-     * otherwise set their first choice as their final choice
+     * revealwise set their first choice as their final choice
      * @param sd a String which is their decision
      * @param firstChoice which is their initial Door Choice
      */
-    private void switchDoor(String sd, int firstChoice){
-        if (sd.equals("y")) {
+    private void switchDoor(String switchChoice, int firstChoice){
+        if (switchChoice.equals("y")) {
             for (int i = 0; i< 3; i++) {
-                if (doors[i].getFirstChoice() == false && doors[i].getOtherDoor() == false) {
+                if (doors[i].getFirstChoice() == false && doors[i].getRevealDoor() == false) {
                     doors[i].setSwitchDoor();
                     doors[i].setFinalChoice();
                 }
@@ -96,7 +154,7 @@ public class Game{
     public void gameShow() {
         // Setup doors
         
-        int firstChoiceDoor, prizeDoor, otherDoor;
+        int firstChoiceDoor, prizeDoor, revealDoor;
 
         // Set Prize Door
         prizeDoor = randNum(3);
@@ -109,8 +167,8 @@ public class Game{
         doors[firstChoiceDoor].setFirstChoice();
         System.out.println("You chose to open Door:" + firstChoiceDoor);
         
-        // Reveal another door
-        revealDoor();
+        // Reveal anreveal door
+        showDoor();
 
         // Offering Switch
         System.out.println("Would you like to switch your door? (y):");
@@ -128,7 +186,7 @@ public class Game{
     
     public static void main(String[] args) {
         Game gm = new Game();
-
+        //gm.gameShow();
     }
         
 }
